@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.tsbuildinfo
+next-env.d.ts
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files (contain API keys)
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# University-distributed course materials — kept locally for reference,
+# not redistributed in this public repo. Team-authored work (the PRD,
+# our own S1 presentation) is intentionally NOT in this list.
+AY2526 LIF001 Module Handbook.pdf
+AY2526 Themes and Topics.pdf
+LIF001_GroupProduct_Assessment2_TaskSheet_Rubrics_FINAL.pdf
+LIF001_GroupReflectiveReport_Assessment3_TaskSheet_Rubrics_FINAL.pdf
