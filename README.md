@@ -61,6 +61,18 @@ npm run dev
 
 Open <http://localhost:3000>, click **Try the Studio**, send a message. You should see a streaming reply from Marlow within a couple of seconds, with the six active rule chips appearing on the right.
 
+### 6. (Optional) Make your own NPC
+
+The 10 built-in NPCs are joined by an open-ended slot for your own characters — useful for trying the prompt builder against personas you wrote yourself, and a strong moment for the Assessment 2 demo video.
+
+1. In the left sidebar, click **+ New** above the NPC list.
+2. Fill in the seven fields. The **Persona** field is the one that actually drives the LLM — write it in second person ("You are…"), keep it concrete, and make sure to include a "you never break character" line. The placeholder shows the recommended template.
+3. Click **Create NPC** — you'll be switched to the new character automatically. Send a message and watch the same six rule chips light up on the right; the architecture treats your custom NPC exactly like a built-in one.
+4. To edit later, hover any NPC with the ✨ icon and click the pencil. The same modal lets you delete (with a confirmation that also clears its chat history).
+5. The **Share** button in the top bar embeds the full NPC body into the URL hash when the active NPC is custom — anyone who opens the link will auto-import it into their own local list.
+
+User-created NPCs live in `localStorage`. Clearing your browser data wipes them; nothing leaves your machine until you click Share.
+
 ---
 
 ## Switching providers
