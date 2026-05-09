@@ -6,7 +6,11 @@ import { useStudio } from "@/lib/store";
 import { NPC_BY_ID } from "@/lib/npcs";
 import { streamChatRequest } from "@/lib/sse-client";
 import { uid } from "@/lib/utils";
-import type { ActiveRule } from "@/lib/types";
+import type { ActiveRule, ChatTurn } from "@/lib/types";
+
+// Stable identity for "no history yet" — `?? []` would create a new array every
+// render and trip useSyncExternalStore's tearing check, causing infinite renders.
+const EMPTY_HISTORY: ChatTurn[] = [];
 
 export function Chat({
   draft,
@@ -19,7 +23,7 @@ export function Chat({
 }) {
   const npcId = useStudio((s) => s.npcId);
   const config = useStudio((s) => s.config);
-  const history = useStudio((s) => s.history[npcId] ?? []);
+  const history = useStudio((s) => s.history[npcId] ?? EMPTY_HISTORY);
   const appendTurn = useStudio((s) => s.appendTurn);
   const appendToLastNpcTurn = useStudio((s) => s.appendToLastNpcTurn);
 

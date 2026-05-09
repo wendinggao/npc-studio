@@ -1,7 +1,10 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class",
+  // "media" mode: dark: variants follow prefers-color-scheme automatically,
+  // matching PRD §10 ("respond to system settings"). Switching to "class" later
+  // would require a toggle UI + an html.dark setter script.
+  darkMode: "media",
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",

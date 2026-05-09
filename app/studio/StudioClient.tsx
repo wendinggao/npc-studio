@@ -111,14 +111,28 @@ export default function StudioClient() {
   return (
     <div className="flex h-screen flex-col bg-parchment-50 dark:bg-slate2-900">
       <TopBar onUseScenario={applyScenario} />
-      <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[320px_1fr_320px]">
-        {/* Left — sidebar */}
-        <div className="hidden border-r border-parchment-200 bg-white/40 lg:block dark:border-slate2-700 dark:bg-slate2-800/40">
-          <Sidebar onClearChat={() => clearHistory(npcId)} />
-        </div>
 
-        {/* Center — chat */}
-        <div className="bg-white dark:bg-slate2-800/20">
+      {/* Main row: sidebar | chat | log on desktop; stacked column on mobile.
+          min-h-0 is critical so flex children can shrink and Chat's internal
+          scrolling actually works instead of pushing the composer offscreen. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        {/* Mobile: collapsible sidebar above the chat */}
+        <details className="border-b border-parchment-200 lg:hidden dark:border-slate2-700">
+          <summary className="cursor-pointer px-5 py-3 text-sm font-medium">
+            NPC & configuration
+          </summary>
+          <div className="max-h-[60vh] overflow-y-auto border-t border-parchment-200 bg-white/40 dark:border-slate2-700 dark:bg-slate2-800/40">
+            <Sidebar onClearChat={() => clearHistory(npcId)} />
+          </div>
+        </details>
+
+        {/* Desktop sidebar */}
+        <aside className="hidden w-[320px] shrink-0 overflow-y-auto border-r border-parchment-200 bg-white/40 thin-scroll lg:block dark:border-slate2-700 dark:bg-slate2-800/40">
+          <Sidebar onClearChat={() => clearHistory(npcId)} />
+        </aside>
+
+        {/* Chat — must be flex-1 + min-w-0 + min-h-0 so it can both fill and shrink. */}
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-slate2-800/20">
           <Chat
             draft={draft}
             onDraftChange={setDraft}
@@ -127,28 +141,22 @@ export default function StudioClient() {
               setAssembledSystem(systemPrompt);
             }}
           />
-        </div>
+        </main>
 
-        {/* Right — behavior log */}
-        <div className="hidden border-l border-parchment-200 bg-white/40 lg:block dark:border-slate2-700 dark:bg-slate2-800/40">
+        {/* Desktop behavior log */}
+        <aside className="hidden w-[320px] shrink-0 overflow-y-auto border-l border-parchment-200 bg-white/40 thin-scroll lg:block dark:border-slate2-700 dark:bg-slate2-800/40">
           <BehaviorLog rules={activeRules} systemPrompt={assembledSystem} />
-        </div>
+        </aside>
 
-        {/* Mobile stack: sidebar + log appear below the chat as collapsibles. */}
-        <div className="border-t border-parchment-200 lg:hidden dark:border-slate2-700">
-          <details className="border-b border-parchment-200 dark:border-slate2-700">
-            <summary className="cursor-pointer px-5 py-3 text-sm font-medium">
-              NPC & configuration
-            </summary>
-            <Sidebar onClearChat={() => clearHistory(npcId)} />
-          </details>
-          <details>
-            <summary className="cursor-pointer px-5 py-3 text-sm font-medium">
-              Behavior log
-            </summary>
+        {/* Mobile: collapsible behavior log below the chat */}
+        <details className="border-t border-parchment-200 lg:hidden dark:border-slate2-700">
+          <summary className="cursor-pointer px-5 py-3 text-sm font-medium">
+            Behavior log
+          </summary>
+          <div className="max-h-[60vh] overflow-y-auto border-t border-parchment-200 bg-white/40 dark:border-slate2-700 dark:bg-slate2-800/40">
             <BehaviorLog rules={activeRules} systemPrompt={assembledSystem} />
-          </details>
-        </div>
+          </div>
+        </details>
       </div>
 
       <WellbeingModal
@@ -157,8 +165,7 @@ export default function StudioClient() {
         onLeave={() => setShowWellbeing(false)}
       />
 
-      {/* Footer link to About — required by PRD §5.3 (academic-integrity disclosure). */}
-      <div className="border-t border-parchment-200 px-5 py-2 text-[11px] text-slate2-400 dark:border-slate2-700 dark:text-parchment-300">
+      <div className="shrink-0 border-t border-parchment-200 px-5 py-2 text-[11px] text-slate2-400 dark:border-slate2-700 dark:text-parchment-300">
         AI usage and reflection are disclosed on the{" "}
         <Link href="/about" className="underline hover:text-accent-500">
           About page
