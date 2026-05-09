@@ -1,44 +1,91 @@
 "use client";
 
-import { useStudio } from "@/lib/store";
-import { NPCS } from "@/lib/npcs";
+import { useStudio, isUserNpcId } from "@/lib/store";
+import { useAllNpcs } from "@/lib/all-npcs";
 import type { EmotionTier, RoleTier } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 
-export function Sidebar({ onClearChat }: { onClearChat: () => void }) {
+export function Sidebar({
+  onClearChat,
+  onCreateNpc,
+  onEditNpc,
+}: {
+  onClearChat: () => void;
+  onCreateNpc: () => void;
+  onEditNpc: (id: string) => void;
+}) {
   const npcId = useStudio((s) => s.npcId);
   const config = useStudio((s) => s.config);
   const setNpc = useStudio((s) => s.setNpc);
   const setConfig = useStudio((s) => s.setConfig);
   const resetConfig = useStudio((s) => s.resetConfig);
+  const allNpcs = useAllNpcs();
 
   const refusalLockedByMain = config.roleTier === "main";
 
   return (
     <aside className="flex h-full flex-col gap-6 overflow-y-auto p-5 thin-scroll">
       <section>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate2-500 dark:text-parchment-300">
-          NPC
-        </h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate2-500 dark:text-parchment-300">
+            NPC
+          </h3>
+          <button
+            onClick={onCreateNpc}
+            className="inline-flex items-center gap-1 rounded-md border border-dashed border-parchment-300 px-2 py-1 text-[11px] font-medium text-slate2-600 transition hover:border-accent-400 hover:text-accent-600 dark:border-slate2-600 dark:text-parchment-200"
+          >
+            <Plus className="h-3 w-3" /> New
+          </button>
+        </div>
         <div className="grid gap-2">
-          {NPCS.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => setNpc(n.id)}
-              className={cn(
-                "flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left text-sm transition",
-                npcId === n.id
-                  ? "border-accent-400 bg-accent-50 text-accent-700 dark:border-accent-400 dark:bg-accent-900/30 dark:text-accent-200"
-                  : "border-parchment-200 bg-white text-slate2-700 hover:border-parchment-300 hover:bg-parchment-50 dark:border-slate2-700 dark:bg-slate2-800 dark:text-parchment-100 dark:hover:bg-slate2-700",
-              )}
-            >
-              <span className="font-medium">{n.name}</span>
-              <span className="line-clamp-1 text-xs text-slate2-500 dark:text-parchment-300">
-                {n.archetype}
-              </span>
-            </button>
-          ))}
+          {allNpcs.map((n) => {
+            const isCustom = isUserNpcId(n.id);
+            const isActive = npcId === n.id;
+            return (
+              <div
+                key={n.id}
+                className={cn(
+                  "group relative rounded-md border transition",
+                  isActive
+                    ? "border-accent-400 bg-accent-50 dark:border-accent-400 dark:bg-accent-900/30"
+                    : "border-parchment-200 bg-white hover:border-parchment-300 hover:bg-parchment-50 dark:border-slate2-700 dark:bg-slate2-800 dark:hover:bg-slate2-700",
+                )}
+              >
+                <button
+                  onClick={() => setNpc(n.id)}
+                  className={cn(
+                    "flex w-full flex-col items-start gap-0.5 px-3 py-2 pr-9 text-left text-sm",
+                    isActive
+                      ? "text-accent-700 dark:text-accent-200"
+                      : "text-slate2-700 dark:text-parchment-100",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 font-medium">
+                    {isCustom && (
+                      <Sparkles
+                        className="h-3 w-3 shrink-0 text-accent-500"
+                        aria-label="Custom NPC"
+                      />
+                    )}
+                    <span className="truncate">{n.name}</span>
+                  </span>
+                  <span className="line-clamp-1 text-xs text-slate2-500 dark:text-parchment-300">
+                    {n.archetype}
+                  </span>
+                </button>
+                {isCustom && (
+                  <button
+                    onClick={() => onEditNpc(n.id)}
+                    title="Edit this NPC"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate2-400 opacity-0 transition hover:bg-parchment-100 hover:text-accent-600 group-hover:opacity-100 focus:opacity-100 dark:hover:bg-slate2-700 dark:hover:text-accent-300"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 

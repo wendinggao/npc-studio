@@ -1,7 +1,7 @@
-import { NPC_BY_ID } from "@/lib/npcs";
 import { buildPrompt } from "@/lib/prompt-builder";
 import type {
   ChatRequest,
+  NPC,
   SSEDoneEvent,
   SSEErrorEvent,
   SSERulesEvent,
@@ -17,6 +17,26 @@ function sse(event: object): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`);
 }
 
+// Defensive validation — the client could send anything, including a partially
+// formed user-created NPC. We require all string fields buildPrompt() touches.
+function isValidNpc(npc: unknown): npc is NPC {
+  if (!npc || typeof npc !== "object") return false;
+  const o = npc as Record<string, unknown>;
+  const required = [
+    "id",
+    "name",
+    "archetype",
+    "setting",
+    "persona",
+    "opener",
+    "worldAnchor",
+  ] as const;
+  for (const f of required) {
+    if (typeof o[f] !== "string" || (o[f] as string).length === 0) return false;
+  }
+  return true;
+}
+
 export async function POST(req: Request) {
   let body: ChatRequest;
   try {
@@ -25,16 +45,15 @@ export async function POST(req: Request) {
     return new Response("invalid json", { status: 400 });
   }
 
-  const npc = NPC_BY_ID[body.npcId];
-  if (!npc) {
-    return new Response("unknown npc", { status: 400 });
+  if (!isValidNpc(body.npc)) {
+    return new Response("invalid npc payload", { status: 400 });
   }
   if (!body.message || body.message.trim().length === 0) {
     return new Response("empty message", { status: 400 });
   }
 
   // Compose the prompt synchronously — this is the IP, the LLM never sees the raw config.
-  const built = buildPrompt(npc, body.config);
+  const built = buildPrompt(body.npc, body.config);
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

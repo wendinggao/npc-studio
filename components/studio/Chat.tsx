@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useStudio } from "@/lib/store";
-import { NPC_BY_ID } from "@/lib/npcs";
+import { useNpcById } from "@/lib/all-npcs";
 import { streamChatRequest } from "@/lib/sse-client";
 import { uid } from "@/lib/utils";
 import type { ActiveRule, ChatTurn } from "@/lib/types";
@@ -27,7 +27,7 @@ export function Chat({
   const appendTurn = useStudio((s) => s.appendTurn);
   const appendToLastNpcTurn = useStudio((s) => s.appendToLastNpcTurn);
 
-  const npc = NPC_BY_ID[npcId];
+  const npc = useNpcById(npcId);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -66,9 +66,10 @@ export function Chat({
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     try {
+      if (!npc) throw new Error("No NPC selected.");
       await streamChatRequest(
         {
-          npcId: captureNpcId,
+          npc,
           config,
           history,
           message: text,

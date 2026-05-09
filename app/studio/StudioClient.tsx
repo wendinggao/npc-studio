@@ -7,9 +7,10 @@ import { Chat } from "@/components/studio/Chat";
 import { BehaviorLog } from "@/components/studio/BehaviorLog";
 import { TopBar } from "@/components/studio/TopBar";
 import { WellbeingModal } from "@/components/studio/WellbeingModal";
+import { NPCEditor } from "@/components/studio/NPCEditor";
 import { useStudio } from "@/lib/store";
 import { readShareFromLocation } from "@/lib/share-codec";
-import type { ActiveRule } from "@/lib/types";
+import type { ActiveRule, NPC } from "@/lib/types";
 
 const FIFTEEN_MINUTES = 15 * 60;
 // PRD §11.3: "再聊 5 分钟" sets next prompt to 10 minutes from now,
@@ -25,6 +26,10 @@ export default function StudioClient() {
   const clearHistory = useStudio((s) => s.clearHistory);
   const npcId = useStudio((s) => s.npcId);
   const setNpc = useStudio((s) => s.setNpc);
+  const userNpcs = useStudio((s) => s.userNpcs);
+  const addUserNpc = useStudio((s) => s.addUserNpc);
+  const updateUserNpc = useStudio((s) => s.updateUserNpc);
+  const removeUserNpc = useStudio((s) => s.removeUserNpc);
 
   // Hydration guard — Zustand persist needs the client mount before reading store.
   const [mounted, setMounted] = useState(false);
@@ -35,7 +40,7 @@ export default function StudioClient() {
     if (!mounted) return;
     const shared = readShareFromLocation();
     if (shared) {
-      applyShared(shared.npcId, shared.config);
+      applyShared(shared.npcId, shared.config, shared.customNpc);
       // Strip the hash so refresh-after-tweak doesn't keep overwriting.
       history.replaceState(null, "", window.location.pathname);
     }
@@ -99,6 +104,35 @@ export default function StudioClient() {
     setDraft(opener);
   }
 
+  // NPC editor — null when closed; "new" for create; an NPC object for edit.
+  const [editorState, setEditorState] = useState<NPC | "new" | null>(null);
+  const editing =
+    editorState === "new" ? null : (editorState as NPC | null);
+
+  function openCreateEditor() {
+    setEditorState("new");
+  }
+
+  function openEditEditor(id: string) {
+    const target = userNpcs.find((n) => n.id === id);
+    if (target) setEditorState(target);
+  }
+
+  function handleEditorSave(draft: Omit<NPC, "id"> & { id?: string }) {
+    if (editing) {
+      updateUserNpc(editing.id, draft);
+    } else {
+      const newId = addUserNpc(draft);
+      setNpc(newId);
+    }
+    setEditorState(null);
+  }
+
+  function handleEditorDelete(id: string) {
+    removeUserNpc(id);
+    setEditorState(null);
+  }
+
   if (!mounted) {
     // Avoid hydration mismatch — render a minimal placeholder before the client store is ready.
     return (
@@ -122,13 +156,21 @@ export default function StudioClient() {
             NPC & configuration
           </summary>
           <div className="max-h-[60vh] overflow-y-auto border-t border-parchment-200 bg-white/40 dark:border-slate2-700 dark:bg-slate2-800/40">
-            <Sidebar onClearChat={() => clearHistory(npcId)} />
+            <Sidebar
+            onClearChat={() => clearHistory(npcId)}
+            onCreateNpc={openCreateEditor}
+            onEditNpc={openEditEditor}
+          />
           </div>
         </details>
 
         {/* Desktop sidebar */}
         <aside className="hidden w-[320px] shrink-0 overflow-y-auto border-r border-parchment-200 bg-white/40 thin-scroll lg:block dark:border-slate2-700 dark:bg-slate2-800/40">
-          <Sidebar onClearChat={() => clearHistory(npcId)} />
+          <Sidebar
+            onClearChat={() => clearHistory(npcId)}
+            onCreateNpc={openCreateEditor}
+            onEditNpc={openEditEditor}
+          />
         </aside>
 
         {/* Chat — must be flex-1 + min-w-0 + min-h-0 so it can both fill and shrink. */}
@@ -163,6 +205,14 @@ export default function StudioClient() {
         open={showWellbeing}
         onSnooze={() => setShowWellbeing(false)}
         onLeave={() => setShowWellbeing(false)}
+      />
+
+      <NPCEditor
+        open={editorState !== null}
+        initial={editing}
+        onClose={() => setEditorState(null)}
+        onSave={handleEditorSave}
+        onDelete={editing ? handleEditorDelete : undefined}
       />
 
       <div className="shrink-0 border-t border-parchment-200 px-5 py-2 text-[11px] text-slate2-400 dark:border-slate2-700 dark:text-parchment-300">

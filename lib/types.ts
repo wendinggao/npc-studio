@@ -59,8 +59,11 @@ export type BuiltPrompt = {
 };
 
 // Wire format for /api/chat request body.
+// We send the full NPC object (not just an id) so the server doesn't need its
+// own catalog — this is what makes user-created NPCs work end-to-end without
+// a backend persistence layer (PRD §16: localStorage only).
 export type ChatRequest = {
-  npcId: string;
+  npc: NPC;
   config: NPCConfig;
   history: ChatTurn[];
   message: string;

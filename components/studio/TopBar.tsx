@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Clock, Copy, Share2, Sparkles } from "lucide-react";
-import { useStudio } from "@/lib/store";
+import { Check, Clock, Share2, Sparkles } from "lucide-react";
+import { useStudio, isUserNpcId } from "@/lib/store";
 import { SCENARIOS } from "@/lib/scenarios";
 import { buildShareUrl } from "@/lib/share-codec";
 
@@ -21,11 +21,16 @@ export function TopBar({
   const sessionSeconds = useStudio((s) => s.sessionSeconds);
   const npcId = useStudio((s) => s.npcId);
   const config = useStudio((s) => s.config);
+  // Only embed the full NPC body in share links when it's user-created.
+  // Built-in NPCs are always available locally, so a reference is enough.
+  const customNpc = useStudio((s) =>
+    isUserNpcId(s.npcId) ? s.userNpcs.find((n) => n.id === s.npcId) : undefined,
+  );
 
   const [copied, setCopied] = useState(false);
 
   async function share() {
-    const url = buildShareUrl(npcId, config);
+    const url = buildShareUrl(npcId, config, customNpc);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
